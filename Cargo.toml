@@ -1,0 +1,26 @@
+[package]
+name = "aoc-2025"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[[bin]]
+name = "1-secret-entrance"
+path = "src/1-secret-entrance.rs"
+
+[[bin]]
+name = "2-gift-shop"
+path = "src/2-gift-shop.rs"
+
+[[bin]]
+name = "3-lobby"
+path = "src/3-lobby.rs"
+
+[[bin]]
+name = "4-printing-department"
+path = "src/4-printing-department.rs"
+
+[[bin]]
+name = "5-cafeteria"
+path = "src/5-cafeteria.rs"
