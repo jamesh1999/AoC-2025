@@ -13,7 +13,7 @@ fn parse_turn(s: &str) -> i64 {
     sign * num.parse::<i64>().unwrap()
 }
 
-fn main() -> Result<(), io::Error>{
+fn main() -> Result<(), io::Error> {
     let f = File::open("1-input.txt")?;
     let br = BufReader::new(f);
     let mut position = 50;

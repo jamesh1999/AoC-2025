@@ -1,4 +1,7 @@
-use std::{fs::File, io::{self, BufRead, BufReader}};
+use std::{
+    fs::File,
+    io::{self, BufRead, BufReader},
+};
 
 fn parse_range(s: &str) -> (i64, i64) {
     let (low_s, high_s) = s.split_once('-').unwrap();
@@ -19,7 +22,7 @@ fn invalid_in_range(low: i64, high: i64) -> i64 {
             if mut_i == 0 {
                 // println!("{} in {}-{}", i, low, high);
                 total += i;
-                break
+                break;
             }
         }
     }
@@ -29,7 +32,8 @@ fn invalid_in_range(low: i64, high: i64) -> i64 {
 fn main() -> Result<(), io::Error> {
     let f = File::open("2-input.txt")?;
     let reader = BufReader::new(f);
-    let mut ranges = reader.lines()
+    let mut ranges = reader
+        .lines()
         .next()
         .unwrap()
         .unwrap()
@@ -42,7 +46,7 @@ fn main() -> Result<(), io::Error> {
     let mut last: i64 = 0;
     for (low, high) in ranges {
         let low = low.max(last);
-        if low <= high { 
+        if low <= high {
             total += invalid_in_range(low, high);
         }
         last = high + 1;

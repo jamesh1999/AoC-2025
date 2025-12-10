@@ -1,4 +1,8 @@
-use std::{cmp::max, fs::File, io::{self, BufRead, BufReader}};
+use std::{
+    cmp::max,
+    fs::File,
+    io::{self, BufRead, BufReader},
+};
 
 fn parse_range(s: &str) -> (u64, u64) {
     let (s1, s2) = s.split_once('-').unwrap();
@@ -17,9 +21,7 @@ fn main() -> Result<(), io::Error> {
         .collect();
     ranges.sort_unstable();
 
-    let mut ids: Vec<u64> = lines
-        .map(|l| l.parse::<u64>().unwrap())
-        .collect();
+    let mut ids: Vec<u64> = lines.map(|l| l.parse::<u64>().unwrap()).collect();
     ids.sort_unstable();
 
     let mut total = 0;
@@ -37,7 +39,7 @@ fn main() -> Result<(), io::Error> {
     //         range_idx += 1;
     //     }
     // }
-    
+
     let mut max_seen = 0;
     for (low, high) in ranges {
         let new_low = max(low, max_seen + 1);

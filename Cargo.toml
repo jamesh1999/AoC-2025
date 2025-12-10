@@ -24,3 +24,11 @@ path = "src/4-printing-department.rs"
 [[bin]]
 name = "5-cafeteria"
 path = "src/5-cafeteria.rs"
+
+[[bin]]
+name = "6-trash-compactor"
+path = "src/6-trash-compactor.rs"
+
+[[bin]]
+name = "7-laboratories"
+path = "src/7-laboratories.rs"
