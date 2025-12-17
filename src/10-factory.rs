@@ -3,7 +3,6 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::str::FromStr;
 use std::u64;
-use nalgebra::{DMatrix, DVector};
 
 #[derive(Debug)]
 struct Machine {

@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-nalgebra = "0.34.1"
 
 [[bin]]
 name = "1-secret-entrance"
@@ -49,3 +48,7 @@ path = "src/10-factory.rs"
 [[bin]]
 name = "11-reactor"
 path = "src/11-reactor.rs"
+
+[[bin]]
+name = "12-christmas-tree-farm"
+path = "src/12-christmas-tree-farm.rs"
