@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+nalgebra = "0.34.1"
 
 [[bin]]
 name = "1-secret-entrance"
@@ -32,3 +33,19 @@ path = "src/6-trash-compactor.rs"
 [[bin]]
 name = "7-laboratories"
 path = "src/7-laboratories.rs"
+
+[[bin]]
+name = "8-playground"
+path = "src/8-playground.rs"
+
+[[bin]]
+name = "9-movie-theater"
+path = "src/9-movie-theater.rs"
+
+[[bin]]
+name = "10-factory"
+path = "src/10-factory.rs"
+
+[[bin]]
+name = "11-reactor"
+path = "src/11-reactor.rs"
