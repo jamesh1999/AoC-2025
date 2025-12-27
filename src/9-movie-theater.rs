@@ -5,7 +5,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 
-
 #[derive(Debug)]
 struct ParseVertexError;
 
@@ -17,11 +16,10 @@ impl Display for ParseVertexError {
 
 impl Error for ParseVertexError {}
 
-
 #[derive(Debug)]
 struct Vertex {
     x: i64,
-    y: i64
+    y: i64,
 }
 
 impl FromStr for Vertex {
@@ -29,12 +27,15 @@ impl FromStr for Vertex {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut values = s.split(',').map(str::parse::<i64>);
 
-        let Some(Ok(x)) = values.next() else { return Err(ParseVertexError) };
-        let Some(Ok(y)) = values.next() else { return Err(ParseVertexError) };
+        let Some(Ok(x)) = values.next() else {
+            return Err(ParseVertexError);
+        };
+        let Some(Ok(y)) = values.next() else {
+            return Err(ParseVertexError);
+        };
         Ok(Vertex { x, y })
     }
 }
-
 
 #[derive(Clone, PartialEq, Eq)]
 struct Segment {
@@ -42,7 +43,7 @@ struct Segment {
     hi: i64,
     truncate_lo: bool,
     truncate_hi: bool,
-    dist: Option<i64>
+    dist: Option<i64>,
 }
 
 impl Segment {
@@ -52,9 +53,7 @@ impl Segment {
             hi: max(start.x, end.x),
             truncate_lo: false,
             truncate_hi: false,
-            dist:
-                if start.x < end.x { Some(start.y) }
-                else { None }
+            dist: if start.x < end.x { Some(start.y) } else { None },
         }
     }
 }
@@ -77,7 +76,6 @@ impl Debug for Segment {
     }
 }
 
-
 fn rect_area(x1: i64, x2: i64, y1: i64, y2: i64) -> i64 {
     (1 + i64::abs(x1 - x2)) * (1 + i64::abs(y1 - y2))
 }
@@ -87,7 +85,9 @@ fn rect_from_point(state: &[Segment], v: &Vertex) -> i64 {
 
     let mut max_y = i64::MIN;
     for segment in state {
-        if segment.hi <= v.x { continue }
+        if segment.hi <= v.x {
+            continue;
+        }
 
         let Some(seg_y) = segment.dist else { break };
         if seg_y >= max_y {
@@ -103,7 +103,9 @@ fn rect_from_point(state: &[Segment], v: &Vertex) -> i64 {
 
     let mut max_y = i64::MIN;
     for segment in state.iter().rev() {
-        if segment.lo >= v.x { continue }
+        if segment.lo >= v.x {
+            continue;
+        }
 
         let Some(seg_y) = segment.dist else { break };
         if seg_y >= max_y {
@@ -125,8 +127,16 @@ fn update_state(state: &mut Vec<Segment>, incoming: Segment) {
         if incoming.lo <= current.lo && current.hi <= incoming.hi {
             state.remove(i);
         } else if current.lo < incoming.lo && incoming.hi < current.hi {
-            state.push(Segment { hi: incoming.lo, truncate_hi: true, ..current });
-            state.push(Segment { lo: incoming.hi, truncate_lo: true, ..current });
+            state.push(Segment {
+                hi: incoming.lo,
+                truncate_hi: true,
+                ..current
+            });
+            state.push(Segment {
+                lo: incoming.hi,
+                truncate_lo: true,
+                ..current
+            });
             state.remove(i);
         } else if current.lo < incoming.lo && incoming.lo < current.hi {
             state[i].hi = incoming.lo;
@@ -143,10 +153,10 @@ fn update_state(state: &mut Vec<Segment>, incoming: Segment) {
 fn main() -> Result<(), Box<dyn Error>> {
     let f = File::open("9-input.txt")?;
     let reader = BufReader::new(f);
-    let vertices: Vec<_> = reader.lines()
+    let vertices: Vec<_> = reader
+        .lines()
         .map(|l| Ok(l?.parse::<Vertex>()?))
         .collect::<Result<_, Box<dyn Error>>>()?;
-
 
     let mut horizontal_edges: Vec<(usize, usize)> = Vec::new();
     for i in 0..vertices.len() {
@@ -158,7 +168,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     horizontal_edges.sort_unstable_by_key(|e| vertices[e.0].y);
 
     let mut max_area: i64 = 0;
-    let mut state = vec![Segment { lo: i64::MIN, hi: i64::MAX, truncate_lo: false, truncate_hi: false, dist: None }];
+    let mut state = vec![Segment {
+        lo: i64::MIN,
+        hi: i64::MAX,
+        truncate_lo: false,
+        truncate_hi: false,
+        dist: None,
+    }];
     for e in horizontal_edges {
         let start = &vertices[e.0];
         let end = &vertices[e.1];

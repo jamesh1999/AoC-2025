@@ -15,9 +15,7 @@ const NEIGHBOURS: [(i32, i32); 8] = [
 ];
 
 fn parse_grid_line(line: &str) -> Vec<bool> {
-    line.chars()
-        .map(|c| c == '@')
-        .collect()
+    line.chars().map(|c| c == '@').collect()
 }
 
 fn get_grid_cell(grid: &[Vec<bool>], x: i32, y: i32) -> bool {
@@ -65,7 +63,7 @@ fn main() -> Result<(), io::Error> {
         .lines()
         .map(|line| Ok(parse_grid_line(&line?)))
         .collect::<Result<_, io::Error>>()?;
-    
+
     let mut current_grid = original_grid.clone();
     let last_grid = loop {
         let next_grid = update_grid(&current_grid);

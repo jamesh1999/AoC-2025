@@ -29,9 +29,7 @@ fn main() -> Result<(), io::Error> {
     let f = File::open("2-input.txt")?;
     let reader = BufReader::new(f);
     let range_line = reader.lines().next().unwrap()?;
-    let mut ranges: Vec<_> = range_line.split(",")
-        .map(parse_range)
-        .collect();
+    let mut ranges: Vec<_> = range_line.split(",").map(parse_range).collect();
     ranges.sort_unstable();
 
     let mut total: i64 = 0;

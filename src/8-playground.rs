@@ -1,4 +1,10 @@
-use std::{error::Error, fs::File, io::{BufRead, BufReader}, num::ParseIntError, str::FromStr};
+use std::{
+    error::Error,
+    fs::File,
+    io::{BufRead, BufReader},
+    num::ParseIntError,
+    str::FromStr,
+};
 
 #[derive(Debug)]
 struct Node {
@@ -12,7 +18,7 @@ impl Node {
         let dx = i64::from(a.x) - i64::from(b.x);
         let dy = i64::from(a.y) - i64::from(b.y);
         let dz = i64::from(a.z) - i64::from(b.z);
-        dx*dx + dy*dy + dz*dz
+        dx * dx + dy * dy + dz * dz
     }
 }
 
@@ -31,7 +37,7 @@ impl FromStr for Node {
 #[derive(Debug)]
 struct DisjointSet<T> {
     nodes: Vec<T>,
-    parents: Vec<usize>
+    parents: Vec<usize>,
 }
 
 impl<T> DisjointSet<T> {
@@ -67,13 +73,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let f = File::open("8-input.txt")?;
     let reader = BufReader::new(f);
 
-    let nodes: Vec<_> = reader.lines()
+    let nodes: Vec<_> = reader
+        .lines()
         .map(|l| Ok(l?.parse::<Node>()?))
         .collect::<Result<_, Box<dyn Error>>>()?;
 
     let mut edges: Vec<(i64, usize, usize)> = Vec::new();
     for i in 0..nodes.len() {
-        for j in i+1..nodes.len() {
+        for j in i + 1..nodes.len() {
             let sqr_dist = Node::square_dist(&nodes[i], &nodes[j]);
             edges.push((sqr_dist, i, j));
         }
@@ -81,7 +88,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     edges.sort_unstable_by_key(|(d, _, _)| *d);
 
     let mut ds: DisjointSet<_> = DisjointSet::new(nodes);
-    let connections: Vec<_> = edges.iter()
+    let connections: Vec<_> = edges
+        .iter()
         .filter_map(|(_, i, j)| ds.union(*i, *j).map(|_| (*i, *j)))
         .collect();
 

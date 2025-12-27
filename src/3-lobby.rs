@@ -4,13 +4,9 @@ use std::{
 };
 
 fn max_joltage(s: &str) -> u64 {
-    let values: Vec<_> = s
-        .chars()
-        .map(|x| x.to_digit(10).unwrap())
-        .collect();
+    let values: Vec<_> = s.chars().map(|x| x.to_digit(10).unwrap()).collect();
 
     let max_idx = |xs: &[u32]| {
-        
         xs.iter()
             .enumerate()
             .fold(0, |max, (i, &x)| if x > xs[max] { i } else { max })
@@ -27,11 +23,7 @@ fn main() -> Result<(), io::Error> {
     let f = File::open("3-input.txt")?;
     let reader = BufReader::new(f);
 
-    let total: u64 = reader.lines()
-        .map(|l| {
-            max_joltage(&l.unwrap())
-        })
-        .sum();
+    let total: u64 = reader.lines().map(|l| max_joltage(&l.unwrap())).sum();
     println!("Result: {}", total);
     Ok(())
 }
