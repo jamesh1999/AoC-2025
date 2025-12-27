@@ -1,5 +1,5 @@
 {
-    description = "Tutorials from the Rust by Example pages";
+    description = "Advent of Code 2025";
 
     inputs.nixpkgs.url = "nixpkgs";
 
@@ -9,7 +9,7 @@
             pkgs = import nixpkgs { inherit system; };
         in {
             devShells.${system}.default = pkgs.mkShell {
-                name = "qmk-default";
+                name = "rust-default";
                 RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
                 packages = with pkgs; [
                     rustc
