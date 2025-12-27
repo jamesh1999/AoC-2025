@@ -1,6 +1,6 @@
-use std::{collections::HashMap, fs::File, hash::Hash,io::{self, BufRead, BufReader}};
+use std::{error::Error, fs::File, io::{BufRead, BufReader}, num::ParseIntError, str::FromStr};
 
-#[derive(PartialEq, Eq, Clone, Hash, Debug)]
+#[derive(Debug)]
 struct Node {
     x: u32,
     y: u32,
@@ -16,88 +16,79 @@ impl Node {
     }
 }
 
-impl From<&str> for Node {
-    fn from(value: &str) -> Self {
-        let coords: Vec<_> = value.split(',').map(|s| s.parse::<u32>().unwrap()).collect();
-        Node {
-            x: coords[0],
-            y: coords[1],
-            z: coords[2]
-        }
+impl FromStr for Node {
+    type Err = ParseIntError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut it = s.split(',').map(str::parse::<u32>);
+        Ok(Node {
+            x: it.next().unwrap()?,
+            y: it.next().unwrap()?,
+            z: it.next().unwrap()?,
+        })
     }
-}
-
-#[derive(Debug, Clone)]
-struct Edge {
-    a: Node,
-    b: Node
 }
 
 #[derive(Debug)]
 struct DisjointSet<T> {
-    parents: HashMap<T, Option<T>>
+    nodes: Vec<T>,
+    parents: Vec<usize>
 }
 
-impl<T: Eq + Hash> FromIterator<T> for DisjointSet<T> {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        DisjointSet {
-            parents: iter.into_iter().map(|x| (x, None)).collect()
-        }
+impl<T> DisjointSet<T> {
+    fn new(nodes: Vec<T>) -> Self {
+        let parents = (0..nodes.len()).collect();
+        DisjointSet { nodes, parents }
     }
-}
 
-impl<T: Eq + Hash + Clone> DisjointSet<T> {
-    fn representative(&mut self, x: &T) -> Option<T> {
-        match self.parents.get(x)?.clone() {
-            None => Some(x.clone()),
-            Some(p) => {
-                let rep = self.representative(&p)?;
-                self.parents.insert(x.clone(), Some(rep.clone()));
-                Some(rep)
-            }
+    fn representative_idx(&mut self, i: usize) -> usize {
+        let rep = self.parents[i];
+        if rep == i {
+            rep
+        } else {
+            let rep = self.representative_idx(rep);
+            self.parents[i] = rep;
+            rep
         }
     }
 
-    fn union(&mut self, a: &T, b: &T) -> Option<T> {
-        let rep_a = self.representative(a).unwrap();
-        let rep_b = self.representative(b).unwrap();
-        if rep_a != rep_b {
-            self.parents.insert(rep_a, Some(rep_b.clone()));
-            Some(rep_b)
+    fn union(&mut self, i: usize, j: usize) -> Option<usize> {
+        let rep_i = self.representative_idx(i);
+        let rep_j = self.representative_idx(j);
+        if rep_i != rep_j {
+            self.parents[rep_j] = rep_i;
+            Some(rep_i)
         } else {
             None
         }
     }
 }
 
-fn main() -> Result<(), io::Error> {
+fn main() -> Result<(), Box<dyn Error>> {
     let f = File::open("8-input.txt")?;
     let reader = BufReader::new(f);
 
-    let nodes: Vec<Node> = reader.lines()
-        .map(|lr| lr.map(|l| l.as_str().into()))
-        .collect::<Result<_, _>>()?;
-    let node_cnt = nodes.len();
+    let nodes: Vec<_> = reader.lines()
+        .map(|l| Ok(l?.parse::<Node>()?))
+        .collect::<Result<_, Box<dyn Error>>>()?;
 
-    let mut all_edges: Vec<_> =
-        (0..node_cnt).flat_map(|a| {
-            let na = &nodes[a];
-            (a+1..node_cnt).map(|b| {
-                let nb = &nodes[b];
-                let sqr_dist = Node::square_dist(na, nb);
-                (sqr_dist, Edge {a: na.clone(), b: nb.clone()})
-            })
-        })
-        .filter(|(_, e)| e.a != e.b)
-        .collect();
-    all_edges.sort_unstable_by_key(|(d, _)| *d);
+    let mut edges: Vec<(i64, usize, usize)> = Vec::new();
+    for i in 0..nodes.len() {
+        for j in i+1..nodes.len() {
+            let sqr_dist = Node::square_dist(&nodes[i], &nodes[j]);
+            edges.push((sqr_dist, i, j));
+        }
+    }
+    edges.sort_unstable_by_key(|(d, _, _)| *d);
 
-    let mut ds: DisjointSet<_> = nodes.clone().into_iter().collect();
-    let connections: Vec<_> = all_edges.iter()
-        .filter_map(|(_, e)| ds.union(&e.a, &e.b).map(|_|e.clone()))
+    let mut ds: DisjointSet<_> = DisjointSet::new(nodes);
+    let connections: Vec<_> = edges.iter()
+        .filter_map(|(_, i, j)| ds.union(*i, *j).map(|_| (*i, *j)))
         .collect();
 
+    let nodes = ds.nodes;
     let last_connection = connections.last().unwrap();
-    println!("Result {}", u64::from(last_connection.a.x) * u64::from(last_connection.b.x));
+    let last_from = &nodes[last_connection.0];
+    let last_to = &nodes[last_connection.1];
+    println!("Result {}", u64::from(last_from.x) * u64::from(last_to.x));
     Ok(())
 }

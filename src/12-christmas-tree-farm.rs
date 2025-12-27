@@ -1,3 +1,7 @@
+use std::convert::Infallible;
+use std::error::Error;
+use std::num::ParseIntError;
+use std::string::ParseError;
 use std::{fs::File, io::{self, BufRead, BufReader}, str::FromStr};
 
 struct Piece {
@@ -5,27 +9,28 @@ struct Piece {
 }
 
 impl FromStr for Piece {
-    type Err = ();
+    type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let cells: Vec<_> =
+        let cells =
             s.split('\n').map(|row| {
-                row.chars().fold(Vec::new(), |mut state, c| {
+                row.chars().filter_map(|c| {
                     match c {
-                        '#' => state.push(true),
-                        '.' => state.push(false),
-                        _ => ()
-                    };
-                    state
+                        '#' => Some(true),
+                        '.' => Some(false),
+                        _ => None
+                    }
                 })
+                .collect()
             })
             .collect();
-        Ok(Piece { cells: cells })
+        Ok(Piece { cells })
     }
 }
 
 impl Piece {
-    fn bounds_area(&self) -> u64 {
+    #[allow(dead_code)]
+    fn bounding_area(&self) -> u64 {
         let height = self.cells.len();
         if height > 0 {
             (self.cells[0].len() * height) as u64
@@ -37,8 +42,8 @@ impl Piece {
     fn true_area(&self) -> u64 {
         self.cells.iter()
             .flatten()
-            .map(|&b| if b { 1 } else { 0 })
-            .sum()
+            .filter(|&&b| b)
+            .count() as u64
     }
 }
 
@@ -49,21 +54,17 @@ struct Region {
 }
 
 impl FromStr for Region {
-    type Err = ();
+    type Err = ParseIntError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (area_str, requirements_str) = s.split_once(':').unwrap();
         let (width_str, height_str) = area_str.split_once('x').unwrap();
-        let width = width_str.parse::<u64>().unwrap();
-        let height = height_str.parse::<u64>().unwrap();
-        let requirements: Vec<_> = requirements_str.split(' ')
-            .fold(Vec::new(), |mut state, count| {
-                if let Ok(count) = count.parse::<u64>() {
-                    state.push(count);
-                }
-                state
-            });
-        Ok(Region { width: width, height: height, requirements: requirements })
+        let width = width_str.parse::<u64>()?;
+        let height = height_str.parse::<u64>()?;
+        let requirements = requirements_str.split(' ')
+        .filter_map(|s| s.parse::<u64>().ok())
+        .collect();
+        Ok(Region { width, height, requirements })
     }
 }
 
@@ -71,7 +72,7 @@ fn is_solveable(pieces: &[Piece], region: &Region) -> bool {
     // Lower area bound = perfectly packed
     let region_area = region.width * region.height;
     let used_area: u64 = pieces.iter()
-        .zip(region.requirements.clone())
+        .zip(region.requirements.iter())
         .map(|(piece, cnt)| piece.true_area() * cnt)
         .sum();
     if used_area > region_area { return false };
@@ -85,7 +86,7 @@ fn is_solveable(pieces: &[Piece], region: &Region) -> bool {
     false
 }
 
-fn main() -> Result<(), io::Error> {
+fn main() -> Result<(), Box<dyn Error>> {
     let f = File::open("12-input.txt")?;
     let reader = BufReader::new(f);
 
@@ -94,25 +95,19 @@ fn main() -> Result<(), io::Error> {
 
     let pieces: Vec<_> = lines_pieces.chunks(5)
         .map(|lines| {
-            lines[1..lines.len()-1].join("\n").parse::<Piece>().unwrap()
+            Ok(lines[1..lines.len()-1].join("\n").parse::<Piece>()?)
         })
-        .collect();
+        .collect::<Result<_, Box<dyn Error>>>()?;
 
     let regions: Vec<_> = lines_regions.iter()
         .map(|line| {
-            line.parse::<Region>().unwrap()
+            Ok(line.parse::<Region>()?)
         })
-        .collect();
+        .collect::<Result<_, Box<dyn Error>>>()?;
 
-    let result = regions.iter()
-        .map(|region| {
-            if is_solveable(&pieces, region) {
-                1
-            } else {
-                0
-            }
-        })
-        .sum::<u64>();
+    let result: u64 = regions.iter()
+        .filter(|region| is_solveable(&pieces, region))
+        .count() as u64;
     println!("Result: {}", result);
     Ok(())
 }

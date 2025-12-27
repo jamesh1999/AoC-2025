@@ -1,4 +1,5 @@
 use std::{
+    cmp::max,
     fs::File,
     io::{self, BufRead, BufReader},
 };
@@ -8,48 +9,37 @@ fn parse_range(s: &str) -> (i64, i64) {
     (low_s.parse().unwrap(), high_s.parse().unwrap())
 }
 
-fn invalid_in_range(low: i64, high: i64) -> i64 {
-    let mut total: i64 = 0;
-    for i in low..=high {
-        let len = i.ilog10() + 1;
-        for j in (2..=len).filter(|x| len % x == 0) {
-            let split = 10i64.pow(len / j);
-            let target = i % split;
-            let mut mut_i = i;
-            while mut_i > 0 && (mut_i % split) == target {
-                mut_i /= split;
-            }
-            if mut_i == 0 {
-                // println!("{} in {}-{}", i, low, high);
-                total += i;
-                break;
-            }
+fn is_invalid(value: i64) -> bool {
+    let len = value.ilog10() + 1;
+    for j in (1..len).filter(|x| len % x == 0) {
+        let split = 10_i64.pow(j);
+        let target = value % split;
+        let mut mut_value = value;
+        while mut_value > 0 && (mut_value % split) == target {
+            mut_value /= split;
+        }
+        if mut_value == 0 {
+            return true;
         }
     }
-    total
+    false
 }
 
 fn main() -> Result<(), io::Error> {
     let f = File::open("2-input.txt")?;
     let reader = BufReader::new(f);
-    let mut ranges = reader
-        .lines()
-        .next()
-        .unwrap()
-        .unwrap()
-        .split(",")
+    let range_line = reader.lines().next().unwrap()?;
+    let mut ranges: Vec<_> = range_line.split(",")
         .map(parse_range)
-        .collect::<Vec<_>>();
+        .collect();
     ranges.sort_unstable();
 
     let mut total: i64 = 0;
     let mut last: i64 = 0;
     for (low, high) in ranges {
-        let low = low.max(last);
-        if low <= high {
-            total += invalid_in_range(low, high);
-        }
-        last = high + 1;
+        let low = max(low, last);
+        last = max(high + 1, last);
+        total += (low..last).filter(|x| is_invalid(*x)).sum::<i64>();
     }
     println!("Result {}", total);
     Ok(())

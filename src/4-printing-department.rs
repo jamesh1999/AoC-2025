@@ -14,6 +14,12 @@ const NEIGHBOURS: [(i32, i32); 8] = [
     (1, 1),
 ];
 
+fn parse_grid_line(line: &str) -> Vec<bool> {
+    line.chars()
+        .map(|c| c == '@')
+        .collect()
+}
+
 fn get_grid_cell(grid: &[Vec<bool>], x: i32, y: i32) -> bool {
     let (Ok(ux), Ok(uy)) = (usize::try_from(x), usize::try_from(y)) else {
         return false;
@@ -55,21 +61,19 @@ fn count_all_true(grid: &[Vec<bool>]) -> usize {
 fn main() -> Result<(), io::Error> {
     let f = File::open("4-input.txt")?;
     let reader = BufReader::new(f);
-    let original_grid = reader
+    let original_grid: Vec<_> = reader
         .lines()
-        .collect::<Result<Vec<_>, _>>()?
-        .iter()
-        .map(|s| s.chars().map(|c| c == '@').collect::<Vec<_>>())
-        .collect::<Vec<_>>();
-
-    let mut last_grid = original_grid.clone();
-    loop {
-        let next_grid = update_grid(&last_grid);
-        if next_grid == last_grid {
-            break;
+        .map(|line| Ok(parse_grid_line(&line?)))
+        .collect::<Result<_, io::Error>>()?;
+    
+    let mut current_grid = original_grid.clone();
+    let last_grid = loop {
+        let next_grid = update_grid(&current_grid);
+        if next_grid == current_grid {
+            break next_grid;
         }
-        last_grid = next_grid;
-    }
+        current_grid = next_grid;
+    };
 
     println!(
         "Result: {}",
